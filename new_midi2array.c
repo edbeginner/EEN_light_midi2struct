@@ -243,7 +243,7 @@ uint8_t readEvent(FILE **midi_input, uint64_t *data, uint8_t *event) {
 
 	// ! midi gives me 9 bytes???? wtfffffffff
 	case 73: // lyrics, only used to change color
-		if (data_length != 9) {  // unsupported
+		if (data_length != 9 && data_length != 10) {  // unsupported
 			for ( ; data_length > 0; data_length--) {
 				fread(&dump, 1, 1, *midi_input);
 			}
@@ -291,7 +291,7 @@ uint8_t readEvent(FILE **midi_input, uint64_t *data, uint8_t *event) {
 				*event = 125;
 				break;
 			}
-			fread(&dump, 1, 1, *midi_input); // dump "="
+			fread(&dump, 1, 1, *midi_input); // dump ":"
 
             // read rgb info
             for (i = 1; i < 4; i++) {
@@ -301,10 +301,8 @@ uint8_t readEvent(FILE **midi_input, uint64_t *data, uint8_t *event) {
             }
             
             if (data_buffer[0] == partF) {
-                // fread(&tmp[0], 1, 1, *midi_input);
-			    // fread(&tmp[1], 1, 1, *midi_input);
-			    // data_buffer[4] = ascii_hex2value(tmp[0], tmp[1]);
-				data_buffer[4] = 1;
+                fread(&tmp[0], 1, 1, *midi_input);
+			    data_buffer[4] = ascii_hex2value('0', tmp[0]);
             }
 			
 			fread(&dump, 1, 1, *midi_input); // dump " "
@@ -641,22 +639,22 @@ int data2struct(const char name, ws2812 array[ARRAY_SIZE]) {
 				if (partF_brightness[i] > 0) {
 					fast = i + 2;
 					slow = i + 1;
-					// ignore quickly turn on and off (< 0.05 s)
-					while (fast < indexF_t && partF_time[fast] - partF_time[slow] < 500000) {
+					// ignore quickly turn on and off (< 0.03 s)
+					while (fast < indexF_t && partF_time[fast] - partF_time[slow] < 30000) {
 						fast += 2;
 						slow += 2;
 					}
 
 					if (slow < indexF_t) {
-						array[count].strip.SPX_duration = (partF_time[slow] - partF_time[i]) / 1000;
-					} else {
-						array[count].strip.SPX_duration = 0;
+						// metric of duration is mu s
+						array[count++].strip.SPX_duration = partF_time[slow] - partF_time[i];						
 					}
+					array[count].strip.time = partF_time[slow];
 
 					i = slow;	// skip to next info
-				} else {
-					array[count].strip.SPX_duration = 0;
 				}
+				
+				array[count].strip.SPX_duration = 0;
 				count++;
 			}
 

@@ -15,7 +15,7 @@ typedef struct {
 			uint32_t time;
 			uint8_t red, green, blue;
 			uint8_t SPX_type;
-			uint16_t SPX_duration; // !! use ms
+			uint32_t SPX_duration;
 		} strip;
 	};
 } ws2812;
