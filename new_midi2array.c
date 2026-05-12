@@ -20,7 +20,7 @@
 	calculate lasting time for each special effects for evaluating the situation
 	of lights at specific frame better)
 	
-	Assume partA ~ partD are single ws2812 and partE and F are ws2812 strips
+	Assume partA ~ partE are single ws2812 and partF are ws2812 strips
 */
 
 /*
@@ -30,14 +30,14 @@
 
 static uint32_t partA_time[ARRAY_SIZE] = {0};			// time array
 static uint32_t partA_color_time[ARRAY_SIZE] = {0};		// time to change color
-static uint32_t partA_color[ARRAY_SIZE] = {COLORA};	// color data
+static uint32_t partA_color[ARRAY_SIZE] = {COLORA};		// color data
 static uint8_t partA_brightness[ARRAY_SIZE] = {0};		// brightness of light
 static uint16_t indexA_c = 1;							// index of color arrays (color and color_time)
 static uint16_t indexA_t = 1;							// index of time array
 
 static uint32_t partB_time[ARRAY_SIZE] = {0};
 static uint32_t partB_color_time[ARRAY_SIZE] = {0};
-static uint32_t partB_color[ARRAY_SIZE] = {COLORB};	// there might be some default colors
+static uint32_t partB_color[ARRAY_SIZE] = {COLORB};		// there might be some default colors
 static uint8_t partB_brightness[ARRAY_SIZE] = {0};
 static uint16_t indexB_c = 1;
 static uint16_t indexB_t = 1;							// index time also indicates the len of array in the end
@@ -73,13 +73,11 @@ static uint16_t indexF_t = 1;
 
 
 // * finction definations
-
-// I think this one is fine
 uint32_t readHeader(FILE **midi_input) {
 	uint32_t buffer;
 	uint32_t ticks_per_qnote;
 
-	fread(&buffer, 4, 1, *midi_input);	// check MThd
+	fread(&buffer, 4, 1, *midi_input);	// check MThd (some default setting)
 
 	if (buffer != 0x6468544d) {
 		printf("Input file error, was it even a midi file?\n");
@@ -114,7 +112,7 @@ uint32_t readHeader(FILE **midi_input) {
 	return ticks_per_qnote;
 }
 
-// this one is also fine
+// get the time of the event
 float read_dt(FILE **midi_input, float us_per_tick) {
 	uint32_t dt = 0;
 	uint8_t time_buffer = 0;
@@ -127,15 +125,14 @@ float read_dt(FILE **midi_input, float us_per_tick) {
 	}
 	dt = (dt | time_buffer);
 	
-	// printf("%u\n", dt); here is an infinite loop
-
 	return (dt * us_per_tick);
 }
 
 /* 
 	implemented messages:
 		event : status_byte : meaning
-		0     : 8*** 		: NOTE OFF (turn off light)
+		0     : 8*** 		: NOTE OFF (turn off light), this may not happen, midi use
+							  NOTE ON which brightness is 0 to indicate turn off
 		1 	  : 9*** 		: NOTE ON (turn on light)
 		30 	  : b*02  		: brightness (controll lights brightness, not strip)
 		70 	  : ff51 		: tempo
@@ -145,13 +142,13 @@ float read_dt(FILE **midi_input, float us_per_tick) {
 		39, 127,126,125 : other_status : not useful for our propose
 */
 uint8_t readEvent(FILE **midi_input, uint64_t *data, uint8_t *event) {
-	uint8_t event_buffer;   // store temp event
+	uint8_t event_buffer;   		// store temp event
 	uint8_t data_buffer[5] = {0};   // store temp data (pos, r, g, b, SPX)
 	uint8_t data_length;
-	uint8_t dump[8];		// dump uesless data
-	uint8_t tmp[2] = {0};	// store temp value for some computation
-	uint8_t is_running = 0;	// 1 if the event is same as previous onein
-    int i;  // loop index
+	uint8_t dump[8];				// dump uesless data
+	uint8_t tmp[2] = {0};			// store temp value for some computation
+	uint8_t is_running = 0;			// 1 if the event is same as previous onein
+    int i;  						// loop index
 
 	fread(&event_buffer, 1, 1, *midi_input);
 
@@ -241,9 +238,8 @@ uint8_t readEvent(FILE **midi_input, uint64_t *data, uint8_t *event) {
 		}
 		break;
 
-	// ! midi gives me 9 bytes???? wtfffffffff
-	case 73: // lyrics, only used to change color
-		if (data_length != 9 && data_length != 10) {  // unsupported
+	case 73: // lyrics, only used to change color (single ws2812 has 9 bytes and strip has 10)
+		if (data_length != 9 && data_length != 10) {
 			for ( ; data_length > 0; data_length--) {
 				fread(&dump, 1, 1, *midi_input);
 			}
@@ -253,8 +249,8 @@ uint8_t readEvent(FILE **midi_input, uint64_t *data, uint8_t *event) {
 		} else {
 			fread(&data_buffer[0], 1, 1, *midi_input);
 
+			// I change everthing to partX to be consistent
 			switch (data_buffer[0]) {
-				// out agreement
 				case 'H':
 					data_buffer[0] = partA;
 					break;
@@ -300,7 +296,7 @@ uint8_t readEvent(FILE **midi_input, uint64_t *data, uint8_t *event) {
 			    data_buffer[i] = ascii_hex2value(tmp[0],tmp[1]);
             }
             
-            if (data_buffer[0] == partF) {
+            if (data_buffer[0] == partF) {	// strip has special effect byte
                 fread(&tmp[0], 1, 1, *midi_input);
 			    data_buffer[4] = ascii_hex2value('0', tmp[0]);
             }
@@ -351,6 +347,7 @@ uint8_t readEvent(FILE **midi_input, uint64_t *data, uint8_t *event) {
 	return 0;
 }
 
+// save data to the arrays
 void saveData(const uint64_t data, const uint8_t event, const float time_in_us,
 			  float *us_per_tick, const int ticks_per_qnote) {
 	switch (event) {
@@ -543,6 +540,7 @@ void saveData(const uint64_t data, const uint8_t event, const float time_in_us,
 	}
 }
 
+// convert the data in array to structure
 int data2struct(const char name, ws2812 array[ARRAY_SIZE]) {
 	int i = 0, j = 0, count = 0;	// loop indices
 
@@ -669,8 +667,9 @@ int data2struct(const char name, ws2812 array[ARRAY_SIZE]) {
 	return count - 1;
 }
 
+// write the data to a header file
 void write2file(FILE **output, char name, ws2812 *array) {
-	int i;	// loop index
+	int i;		// loop index
 	int new;	// for identation
 
 	switch (name) {

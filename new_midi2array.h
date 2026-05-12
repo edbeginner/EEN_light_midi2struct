@@ -7,7 +7,6 @@
 
 
 // * macros
-
 #define FILENAME_SIZE 20
 #define ARRAY_SIZE 10000
 
