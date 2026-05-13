@@ -629,9 +629,9 @@ int data2struct(const char name, ws2812 array[ARRAY_SIZE]) {
 					j++;
 				}
 				array[count].strip.time = partF_time[i];
-				array[count].light.red = ((partF_color[j] & 0xff) * partF_brightness[i] / 255 * 2 > 255) ? 255 : (partF_color[j] & 0xff) * partF_brightness[i] / 255 * 2;
-				array[count].light.green = (((partF_color[j] >> 8) & 0xff) * partF_brightness[i] / 255 * 2 > 255) ? 255: ((partF_color[j] >> 8) & 0xff) * partF_brightness[i] / 255 * 2;
-				array[count].light.blue = ((partF_color[j] >> 16) & 0xff * partF_brightness[i] / 255 * 2 > 255) ? 255 : (partF_color[j] >> 16) & 0xff * partF_brightness[i] / 255 * 2;
+				array[count].light.red = (partF_color[j] & 0xff) * partF_brightness[i] / 255;
+				array[count].light.green = ((partF_color[j] >> 8) & 0xff) * partF_brightness[i] / 255;
+				array[count].light.blue = (partF_color[j] >> 16) & 0xff * partF_brightness[i] / 255;
 				array[count].strip.SPX_type = partF_SPX[j];
 				
 				// Find when this note really turns off (first later entry with brightness = 0)
@@ -639,7 +639,7 @@ int data2struct(const char name, ws2812 array[ARRAY_SIZE]) {
 					fast = i + 2;
 					slow = i + 1;
 					// ignore quickly turn on and off (< 0.03 s)
-					while (fast < indexF_t && partF_time[fast] - partF_time[slow] < 30000) {
+					while (fast < indexF_t && partF_time[fast] - partF_time[slow] < 30000 && (partF_color_time[j + 1] > partF_time[fast])) {
 						fast += 2;
 						slow += 2;
 					}
