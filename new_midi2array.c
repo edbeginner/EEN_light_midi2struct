@@ -145,7 +145,7 @@ uint8_t readEvent(FILE **midi_input, uint64_t *data, uint8_t *event) {
 	uint8_t event_buffer;   		// store temp event
 	uint8_t data_buffer[5] = {0};   // store temp data (pos, r, g, b, SPX)
 	uint8_t data_length;
-	uint8_t dump[8];				// dump uesless data
+	uint8_t dump;					// dump uesless data
 	uint8_t tmp[2] = {0};			// store temp value for some computation
 	uint8_t is_running = 0;			// 1 if the event is same as previous onein
     int i;  						// loop index
@@ -299,6 +299,7 @@ uint8_t readEvent(FILE **midi_input, uint64_t *data, uint8_t *event) {
             if (data_buffer[0] == partF) {	// strip has special effect byte
                 fread(&tmp[0], 1, 1, *midi_input);
 			    data_buffer[4] = ascii_hex2value('0', tmp[0]);
+				if (data_length == 9) printf("Fucked up. miss one byte\n");
             }
 			
 			fread(&dump, 1, 1, *midi_input); // dump " "
@@ -552,9 +553,9 @@ int data2struct(const char name, ws2812 array[ARRAY_SIZE]) {
 					j++;
 				}
 				array[count].light.time = partA_time[i];
-				array[count].light.red = (partA_color[j] & 0xff) * partA_brightness[i] / 255;
-				array[count].light.green = ((partA_color[j] >> 8) & 0xff) * partA_brightness[i] / 255;
-				array[count].light.blue = ((partA_color[j] >> 16) & 0xff) * partA_brightness[i] / 255;
+				array[count].light.red = ((partA_color[j] & 0xff) * partA_brightness[i] / 255 * 2 > 255) ? 255 : (partA_color[j] & 0xff) * partA_brightness[i] / 255 * 2;
+				array[count].light.green = (((partA_color[j] >> 8) & 0xff) * partA_brightness[i] / 255 * 2 > 255) ? 255: ((partA_color[j] >> 8) & 0xff) * partA_brightness[i] / 255 * 2;
+				array[count].light.blue = ((partA_color[j] >> 16) & 0xff * partA_brightness[i] / 255 * 2 > 255) ? 255 : (partA_color[j] >> 16) & 0xff * partA_brightness[i] / 255 * 2;
 				count++;
 			}
 			indexA_t = count;
@@ -567,9 +568,9 @@ int data2struct(const char name, ws2812 array[ARRAY_SIZE]) {
 					j++;
 				}
 				array[count].light.time = partB_time[i];
-				array[count].light.red = (partB_color[j] & 0xff) * partB_brightness[i] / 255;
-				array[count].light.green = ((partB_color[j] >> 8) & 0xff) * partB_brightness[i] / 255;
-				array[count].light.blue = ((partB_color[j] >> 16) & 0xff) * partB_brightness[i] / 255;
+				array[count].light.red = ((partB_color[j] & 0xff) * partB_brightness[i] / 255 * 2 > 255) ? 255 : (partB_color[j] & 0xff) * partB_brightness[i] / 255 * 2;
+				array[count].light.green = (((partB_color[j] >> 8) & 0xff) * partB_brightness[i] / 255 * 2 > 255) ? 255: ((partB_color[j] >> 8) & 0xff) * partB_brightness[i] / 255 * 2;
+				array[count].light.blue = ((partB_color[j] >> 16) & 0xff * partB_brightness[i] / 255 * 2 > 255) ? 255 : (partB_color[j] >> 16) & 0xff * partB_brightness[i] / 255 * 2;
 				count++;
 			}
 			indexB_t = count;
@@ -582,9 +583,9 @@ int data2struct(const char name, ws2812 array[ARRAY_SIZE]) {
 					j++;
 				}
 				array[count].light.time = partC_time[i];
-				array[count].light.red = (partC_color[j] & 0xff) * partC_brightness[i] / 255;
-				array[count].light.green = ((partC_color[j] >> 8) & 0xff) * partC_brightness[i] / 255;
-				array[count].light.blue = ((partC_color[j] >> 16) & 0xff) * partC_brightness[i] / 255;
+				array[count].light.red = ((partC_color[j] & 0xff) * partC_brightness[i] / 255 * 2 > 255) ? 255 : (partC_color[j] & 0xff) * partC_brightness[i] / 255 * 2;
+				array[count].light.green = (((partC_color[j] >> 8) & 0xff) * partC_brightness[i] / 255 * 2 > 255) ? 255: ((partC_color[j] >> 8) & 0xff) * partC_brightness[i] / 255 * 2;
+				array[count].light.blue = ((partC_color[j] >> 16) & 0xff * partC_brightness[i] / 255 * 2 > 255) ? 255 : (partC_color[j] >> 16) & 0xff * partC_brightness[i] / 255 * 2;
 				count++;
 			}
 			indexC_t = count;
@@ -597,9 +598,9 @@ int data2struct(const char name, ws2812 array[ARRAY_SIZE]) {
 					j++;
 				}
 				array[count].light.time = partD_time[i];
-				array[count].light.red = (partD_color[j] & 0xff) * partD_brightness[i] / 255;
-				array[count].light.green = ((partD_color[j] >> 8) & 0xff) * partD_brightness[i] / 255;
-				array[count].light.blue = ((partD_color[j] >> 16) & 0xff) * partD_brightness[i] / 255;
+				array[count].light.red = ((partD_color[j] & 0xff) * partD_brightness[i] / 255 * 2 > 255) ? 255 : (partD_color[j] & 0xff) * partD_brightness[i] / 255 * 2;
+				array[count].light.green = (((partD_color[j] >> 8) & 0xff) * partD_brightness[i] / 255 * 2 > 255) ? 255: ((partD_color[j] >> 8) & 0xff) * partD_brightness[i] / 255 * 2;
+				array[count].light.blue = ((partD_color[j] >> 16) & 0xff * partD_brightness[i] / 255 * 2 > 255) ? 255 : (partD_color[j] >> 16) & 0xff * partD_brightness[i] / 255 * 2;
 				count++;
 			}
 			indexD_t = count;
@@ -612,9 +613,9 @@ int data2struct(const char name, ws2812 array[ARRAY_SIZE]) {
 					j++;
 				}
 				array[count].light.time = partE_time[i];
-				array[count].light.red = (partE_color[j] & 0xff) * partE_brightness[i] / 255;
-				array[count].light.green = ((partE_color[j] >> 8) & 0xff) * partE_brightness[i] / 255;
-				array[count].light.blue = ((partE_color[j] >> 16) & 0xff) * partE_brightness[i] / 255;
+				array[count].light.red = ((partE_color[j] & 0xff) * partE_brightness[i] / 255 * 2 > 255) ? 255 : (partE_color[j] & 0xff) * partE_brightness[i] / 255 * 2;
+				array[count].light.green = (((partE_color[j] >> 8) & 0xff) * partE_brightness[i] / 255 * 2 > 255) ? 255: ((partE_color[j] >> 8) & 0xff) * partE_brightness[i] / 255 * 2;
+				array[count].light.blue = ((partE_color[j] >> 16) & 0xff * partE_brightness[i] / 255 * 2 > 255) ? 255 : (partE_color[j] >> 16) & 0xff * partE_brightness[i] / 255 * 2;
 				count++;
 			}
 			indexE_t = count;
@@ -628,9 +629,9 @@ int data2struct(const char name, ws2812 array[ARRAY_SIZE]) {
 					j++;
 				}
 				array[count].strip.time = partF_time[i];
-				array[count].strip.red = (partF_color[j] & 0xff) * partF_brightness[i] / 255;
-				array[count].strip.green = ((partF_color[j] >> 8) & 0xff) * partF_brightness[i] / 255;
-				array[count].strip.blue = ((partF_color[j] >> 16) & 0xff) * partF_brightness[i] / 255;
+				array[count].light.red = ((partF_color[j] & 0xff) * partF_brightness[i] / 255 * 2 > 255) ? 255 : (partF_color[j] & 0xff) * partF_brightness[i] / 255 * 2;
+				array[count].light.green = (((partF_color[j] >> 8) & 0xff) * partF_brightness[i] / 255 * 2 > 255) ? 255: ((partF_color[j] >> 8) & 0xff) * partF_brightness[i] / 255 * 2;
+				array[count].light.blue = ((partF_color[j] >> 16) & 0xff * partF_brightness[i] / 255 * 2 > 255) ? 255 : (partF_color[j] >> 16) & 0xff * partF_brightness[i] / 255 * 2;
 				array[count].strip.SPX_type = partF_SPX[j];
 				
 				// Find when this note really turns off (first later entry with brightness = 0)
