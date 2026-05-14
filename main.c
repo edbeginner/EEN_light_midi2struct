@@ -7,13 +7,17 @@
 int main(int argc, char **argv)
 {
     FILE *input, *output;
-	float time_in_us = 0;
+	double time_in_us = 0;
+    double pre_time_in_us = 0;
 	uint64_t data = 0;
 	uint8_t event = 127;
-	float us_per_tick = 1;
-	int ticks_per_qnote = 1;
+    uint32_t us_per_qnote = 500000;
+	uint32_t ticks_per_qnote = 1;
 	char input_filename[FILENAME_SIZE];
     char output_filename[FILENAME_SIZE + 3];
+
+    uint32_t total_ticks = 0;
+    uint32_t archor_ticks = 0;
 
     ws2812 part_A[ARRAY_SIZE];
     ws2812 part_B[ARRAY_SIZE];
@@ -64,12 +68,15 @@ int main(int argc, char **argv)
 		return 0;
 	}
 
-    us_per_tick = 500000.0f / ticks_per_qnote;
-
+    
     while (1) { // there is an infinite loop inside this one
-        time_in_us += read_dt(&input, us_per_tick);
+        total_ticks += read_dt(&input);
+        time_in_us = pre_time_in_us + (total_ticks - archor_ticks) * (double)us_per_qnote / ticks_per_qnote;
         if (readEvent(&input, &data, &event)) break;
-        saveData(data, event, time_in_us, &us_per_tick, ticks_per_qnote);
+        if (saveData(data, event, time_in_us, &us_per_qnote, ticks_per_qnote)) {
+            archor_ticks = total_ticks;
+            pre_time_in_us = time_in_us;
+        }
     }
     data2struct(partA, part_A);
     data2struct(partB, part_B);
