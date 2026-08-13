@@ -73,7 +73,7 @@ int main(int argc, char **argv)
         total_ticks += read_dt(&input);
         time_in_us = pre_time_in_us + (total_ticks - archor_ticks) * (double)us_per_qnote / ticks_per_qnote;
         if (readEvent(&input, &data, &event)) break;
-        if (saveData(data, event, time_in_us, &us_per_qnote, ticks_per_qnote)) {
+        if (saveData(data, event, time_in_us, &us_per_qnote)) {
             archor_ticks = total_ticks;
             pre_time_in_us = time_in_us;
         }

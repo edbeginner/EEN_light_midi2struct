@@ -30,7 +30,7 @@ uint8_t readEvent(FILE **midi_input, uint64_t *data, uint8_t *event);
 
 // store data to corresponding array, return 1 if change us_per_tick, else 0
 int saveData(const uint64_t data, const uint8_t event, const double time_in_us,
-			  uint32_t *us_per_qnote, const int ticks_per_qnote);
+			  uint32_t *us_per_qnote);
 
 // change data to struct and return the len of array
 int data2struct(const char name, ws2812 array[ARRAY_SIZE]);
